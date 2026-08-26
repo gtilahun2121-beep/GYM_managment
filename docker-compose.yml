@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gym-postgres
+    environment:
+      POSTGRES_USER: gym_admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gym_system
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U gym_admin']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: gym-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: gym-api
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://gym_admin:password@postgres:5432/gym_system
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-secret-key
+      PORT: 3000
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app/api
+    command: npm run dev
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: gym-web
+    environment:
+      VITE_API_URL: http://localhost:3000/v1
+    ports:
+      - '3001:3001'
+    depends_on:
+      - api
+    volumes:
+      - ./apps/web:/app/web
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: gym-network

@@ -1,0 +1,26 @@
+{
+  "name": "gym-management-system",
+  "version": "1.0.0",
+  "description": "Comprehensive gym management web application",
+  "private": true,
+  "packageManager": "npm@10.2.4",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:migrate": "cd apps/api && npm run db:migrate",
+    "db:seed": "cd apps/api && npm run db:seed",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@turbo/gen": "latest",
+    "turbo": "latest"
+  }
+}
